@@ -4,22 +4,31 @@ lambda_function.py - AWS Lambda Function to calculate child support in Texas.
 Copyright (c) 2021 by Thomas J. Daley. All. Rights. Reserved.
 """
 import json
-import logging
 import math
-from config import *
+from .config import \
+    CHILD_SUPPORT_FACTORS, \
+    MONTHLY_NET_RESOURCES_CAP,\
+    US_IRC_PERSONAL_EXEMPTION, \
+    US_IRC_STANDARD_DEDUCTION, \
+    US_MAX_SOC_SEC_WAGES, \
+    US_MEDICARE_RATE_1099, \
+    US_MEDICARE_RATE_W2, \
+    US_SELF_EMPLOYMENT_FACTOR, \
+    US_SOC_SEC_RATE_1099, \
+    US_SOC_SEC_RATE_W2
+
 
 def lambda_handler(event, context):
     """
     Function to calculate child support in Texas.
     """
-    raise Exception("Event: " + json.dumps(event))
     missing_fields = verify_fields(event)
     if missing_fields:
         raise Exception("Missing fields: " + ", ".join(missing_fields))
     user_data = copy_event_data(event)
     clean_data(user_data)
 
-    net_resources_cap = 9200.0 * 12.0
+    net_resources_cap = MONTHLY_NET_RESOURCES_CAP * 12.0
     user_data['gross_income_annual'] = user_data['income_amount'] * user_data['income_frequency']
     user_data['medical_annual'] = user_data['medical_ins_amount'] * user_data['medical_ins_frequency']
     user_data['dental_annual'] = user_data['dental_ins_amount'] * user_data['dental_ins_frequency']
@@ -41,7 +50,6 @@ def verify_fields(event: dict) -> list:
         'self_employed', 'children_inside', 'children_outside'
     ]
     return [k for k in keys if k not in event]
-
 
 
 def copy_event_data(event: dict) -> dict:
@@ -82,16 +90,6 @@ def round_up(number, decimals: int = 2) -> float:
 
 
 def support_factor(user_data: dict):
-    factors = [
-        [],
-        [.2, .175, .16, .1475, .1360, .1333, .1314, .13],
-        [.25, .225, .2063, .19, .1833, .1786, .175, .1722],
-        [.3, .2738, .2520, .24, .2314, .225, .22, .216],
-        [.35, .322, .3033, .29, .28, .2722, .266, .2609],
-        [.4, .3733, .3543, .34, .3289, .32, .3127, .3067],
-        [.4, .3771, .36, .3467, .336, .3273, .32, .3138],
-        [.4, .38, .3644, .352, .3418, .3333, .3262, .32]
-    ]
     children_in = min(user_data['children_inside'], len(CHILD_SUPPORT_FACTORS)-1)
     children_out = min(len(CHILD_SUPPORT_FACTORS[children_in])-1, user_data['children_outside'])
     return CHILD_SUPPORT_FACTORS[children_in][children_out]
@@ -101,13 +99,14 @@ def annual_net_resources(user_data: dict):
     """
     From Texas Family Code 154.062.
     """
-    return user_data['gross_income_annual'] - \
-           user_data['medical_annual'] - \
-           user_data['dental_annual'] - \
-           user_data['union_dues_annual'] - \
-           user_data['social_sec_annual'] - \
-           user_data['medicare_annual'] - \
-           user_data['income_tax_annual']
+    return \
+        user_data['gross_income_annual'] - \
+        user_data['medical_annual'] - \
+        user_data['dental_annual'] - \
+        user_data['union_dues_annual'] - \
+        user_data['social_sec_annual'] - \
+        user_data['medicare_annual'] - \
+        user_data['income_tax_annual']
 
 
 def social_security(user_data):
@@ -195,6 +194,7 @@ def convert_types(user_data):
         if types.get(key) == float:
             user_data[key] = float(value)
             continue
+
 
 def test():
     data = {
