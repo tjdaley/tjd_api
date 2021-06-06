@@ -5,7 +5,7 @@ Copyright (c) 2021 by Thomas J. Daley. All. Rights. Reserved.
 """
 import json
 import math
-from .config import \
+from config import \
     CHILD_SUPPORT_FACTORS, \
     MONTHLY_NET_RESOURCES_CAP,\
     US_IRC_PERSONAL_EXEMPTION, \
