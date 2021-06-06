@@ -8,7 +8,7 @@ import json
 
 def lambda_handler(event, context):
     echo_string = event.get('queryStringParameters', {}).get('text', 'Mr. Noname')
-    context_serializable = {k:v for k, v in context.__dict__.items() if type(v) in [int, float, bool, str, list, dict]}
+    context_serializable = {k: v for k, v in context.__dict__.items() if type(v) in [int, float, bool, str, list, dict]}
     response = {
         'headers': event.get('headers'),
         'message': f"Say '{echo_string}'",
